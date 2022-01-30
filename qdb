@@ -255,6 +255,25 @@ def compare():
         print()
         rank=rank+1
 
+def get_fidelities():
+    if(args.arch == None):
+        sys.stderr.write('error: argument --arch required\n')
+        parser.print_help()
+        exit(2)
+
+    gate_errors={}
+    try:
+        with open("qdb_extra/"+args.arch+".csv", "r") as f:
+            for entry in list(map(lambda x: x.split(), f.read().split("\n"))):
+                if(entry==[]):
+                    break
+                gate_errors[entry[0]]=float(entry[1])
+    except IOError as error:
+        print(error)
+        exit(2)
+    print(colored(args.arch + " Gate Fidelities",attrs=['underline']))
+    for key,value in gate_errors.items():
+        print(format_gate(key)+": ",round(value,3))
 
 def main():
     if(args.arch != None):
@@ -266,6 +285,8 @@ def main():
         decompose()
     if(args.mode=='comp' or args.mode=='compare'):
         compare()
+    if(args.mode=='fid' or args.mode=='fidelity'):
+        get_fidelities()
 
 if __name__ == "__main__":
     main()
