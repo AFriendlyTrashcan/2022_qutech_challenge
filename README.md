@@ -198,7 +198,7 @@ We notice a monotonic tendency for QDB to overestimate the success probability f
 | CZ:      | 0.936 |
 | SWAP:    | 0.936 |
 
-These fidelities were noticeable lower than discussed in the data-sheet, though this is to be expected as the computer has since aged / has lost perfect calllibration.
+These fidelities were noticeable lower than discussed in the data-sheet, though this is to be expected as the computer has since aged / has lost perfect callibration.
 
 ### Spin-2 Gate Fidelity
 | Measure: | 0.922 |
@@ -212,7 +212,7 @@ These fidelities were noticeable lower than discussed in the data-sheet, though 
 | CZ:      | 0.965 |
 | SWAP:    | 0.901 |
 
-Unsprprisingly gate fidelities are almost uniformly worse on the Spin-2 computer, however surprisingly the results seem far more stochastic. This suggests the instability in the Spin-2 computers we were warned of at the beginning of the challenge. Furthermore, we observe high performance on two qubit gates. This could either be argued as a perk of the platform, or a symptom of the X-gate being the most dominant error channel to the point where others are negligible.
+Unsurprisingly gate fidelities are almost uniformly worse on the Spin-2 computer, however surprisingly the results seem far more stochastic. This suggests the instability in the Spin-2 computers we were warned of at the beginning of the challenge. Furthermore, we observe high performance on two qubit gates. This could either be argued as a perk of the platform, or a symptom of the X-gate being the most dominant error channel to the point where others are negligible.
 ## Personal Experiences
 Our hacking began yesterday morning in the blinding snow. We quickly abandoned our plans to meet in a building across campus and instead congregated in a dorm with a day’s worth of snacks to begin working in earnest. Our team had grown to five members over the past week. We started off in our own direction, each of us sifting through papers to try to pry open the inner workings of error correction and investigate its practical applications. Argy and Sofia began an intense conversation about error propagation while Ben and Wyatt muddled through different schemes for error detection and correction. We ate our cold meals that we had squirreled away, because the dining halls were all closed for the snow. Over the next hour, Alex started to type furiously, and then shared with us his plan to write a program to automate the process of error analysis. We rallied around this common goal for our project. We continued working intently, becoming increasingly bold in our usage of the Quantum Inspire backends, only stopping to sing Bohemian Rhapsody and for a brief game of Smash Bros. This hackathon has been the first for all of our members, and it has been a valuable learning experience.
 
