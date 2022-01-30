@@ -11,6 +11,7 @@
   * [Benchmarking the Starmon-5 Hardware](#benchmarking-the-starmon-5-hardware)
     + [Measuring Gate Fidelities](#measuring-gate-fidelities)
     + [Predicting Algorithm Success](#predicting-algorithm-success)
+    + [Evaluating Efficacy of QDB Success Rate Predictions](#evaluating-efficacy-of-qdb-success-rate-predictions)
   * [Personal Experiences](#personal-experiences)
   * [Sources](#sources)
 ## Overview
@@ -167,7 +168,7 @@ Quantum Circuit 4: Steane [[5,1,3]] Code
 Quantum Circuit 5: Steane [[7,1,3] Code
 ![SteaneSeven](images/steane7code.png)
 
-
+### Evaluating Efficacy of QDB Success Rate Predictions
 
 ## Personal Experiences
 Our hacking began yesterday morning in the blinding snow. We quickly abandoned our plans to meet in a building across campus and instead congregated in a dorm with a day’s worth of snacks to begin working in earnest. Our team had grown to five members over the past week. We started off in our own direction, each of us sifting through papers to try to pry open the inner workings of error correction and investigate its practical applications. Argy and Sofia began an intense conversation about error propagation while Ben and Wyatt muddled through different schemes for error detection and correction. We ate our cold meals that we had squirreled away, because the dining halls were all closed for the snow. Over the next hour, Alex started to type furiously, and then shared with us his plan to write a program to automate the process of error analysis. We rallied around this common goal for our project. We continued working intently, becoming increasingly bold in our usage of the Quantum Inspire backends, only stopping to sing Bohemian Rhapsody and for a brief game of Smash Bros. This hackathon has been the first for all of our members, and it has been a valuable learning experience.
