@@ -1,0 +1,5 @@
+coreapi==2.3.3
+numpy==1.22.0
+qiskit==0.34.1
+qiskit_ignis==0.7.0
+quantuminspire==1.7.0

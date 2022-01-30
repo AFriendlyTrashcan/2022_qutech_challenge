@@ -1,0 +1,271 @@
+#! /bin/python3
+
+import sys
+import time
+import pandas
+import argparse
+import numpy as np 
+from glob import glob
+from getpass import getpass
+from termcolor import colored
+from multiprocessing.pool import ThreadPool
+
+from quantuminspire.qiskit import QI
+from coreapi.auth import BasicAuthentication
+from quantuminspire.credentials import save_account
+
+from qiskit import QuantumCircuit, assemble, Aer, execute
+from qiskit.circuit import QuantumRegister, ClassicalRegister, QuantumCircuit
+
+from qdb_extra import QI_authenticate
+from qdb_extra.fidelity_tests import *
+
+parser = argparse.ArgumentParser(description='QDB Quantum Circuit Debugger')
+parser.add_argument('mode', type=str, help='(BENCHmark|DECompose|COMPare)')
+parser.add_argument('--circuit', type=str, nargs='*', help='Input Circuit .qasm')
+parser.add_argument('--arch', type=str, help='QC Architecture (Starmon-5|Spin-2)')
+parser.add_argument('--measure', type=str, default="TRUE", help='Include Measurement Error (True|False)')
+args = parser.parse_args()
+
+
+def prob_round(n):
+    return n if n < 1 else 1
+def progressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
+    # Displays a nice progress bar
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+    if iteration == total: 
+        print()
+def success_rate(cDir):
+    gate_errors={}
+    try:
+        with open("qdb_extra/"+args.arch+".csv", "r") as f:
+            for entry in list(map(lambda x: x.split(), f.read().split("\n"))):
+                if(entry==[]):
+                    break
+                gate_errors[entry[0]]=float(entry[1])
+    except IOError as error:
+        print(error)
+        exit(2)
+    gates = {}
+    try:
+        with open(cDir, 'r') as f:
+            gates = find_gates(f.read())
+    except IOError as error:
+        print(error)
+        exit(2)
+    sorted_gates = [(k,v) for k, v in sorted(gates.items(), reverse=True, key=lambda item: 1-(gate_errors[item[0]]**item[1]))]
+    success_rate=1
+    for pair in sorted_gates:
+        #print(pair[1])
+        success_rate=success_rate*(gate_errors[pair[0]]**pair[1])
+    return round(success_rate,3)
+
+def find_gates(qc):
+    commands = qc.split("\n")
+    newDict = {}
+    for gate in ['x','y','z','h','cx','cy','cz','swap']:
+        gateLines = [x for x in commands if x.replace("("," ").split(" ")[0]==gate]
+        newDict[gate] = len(gateLines) 
+    if(args.measure.upper()=="TRUE"):
+        gateLines = [x for x in commands if x.replace("("," ").split(" ")[0]=="measure"]
+        newDict["measure"] = len(gateLines)
+    return newDict
+
+def format_gate(gate):
+    style = {'sdg': 'S†', 'tdg': 'T†', 'measure': 'Measure'}
+    if gate in style:
+        return style[gate]
+    else:
+        return gate.upper()
+
+def benchmark():
+    if(args.arch != 'Starmon-5' and args.arch != 'Spin-2'):
+        sys.stderr.write('error: argument --arch must be Starmon-5 or Spin-2\n')
+        parser.print_help()
+        exit(2)
+
+    qi_backend = QI_authenticate.get_backend(args.arch)
+    shots = 16384 if args.arch=='Starmon-5' else 4096
+
+    pool = ThreadPool(processes=9)
+    results = {}
+
+    progressBar(0, 100, prefix = 'Progress: ', suffix = 'Complete', length = 50)
+    results['measure']=pool.apply_async(m_test,(qi_backend,shots))
+    progressBar(1, 100, prefix = 'Progress: ', suffix = 'Complete', length = 50)
+    time.sleep(2)
+    results['x']=pool.apply_async(x_test,(qi_backend,shots))
+    progressBar(2, 100, prefix = 'Progress: ', suffix = 'Complete', length = 50)
+    time.sleep(2)
+    results['y']=pool.apply_async(y_test,(qi_backend,shots))
+    progressBar(3, 100, prefix = 'Progress: ', suffix = 'Complete', length = 50)
+    time.sleep(2)
+    results['z']=pool.apply_async(z_test,(qi_backend,shots))
+    progressBar(4, 100, prefix = 'Progress: ', suffix = 'Complete', length = 50)
+    time.sleep(2)
+    results['h']=pool.apply_async(h_test,(qi_backend,shots))
+    progressBar(5, 100, prefix = 'Progress: ', suffix = 'Complete', length = 50)
+    time.sleep(2)
+    results['cx']=pool.apply_async(cx_test,(qi_backend,shots))
+    progressBar(6, 100, prefix = 'Progress: ', suffix = 'Complete', length = 50)
+    time.sleep(2)
+    results['cy']=pool.apply_async(cy_test,(qi_backend,shots))
+    progressBar(7, 100, prefix = 'Progress: ', suffix = 'Complete', length = 50)
+    time.sleep(2)
+    results['cz']=pool.apply_async(cz_test,(qi_backend,shots))
+    progressBar(8, 100, prefix = 'Progress: ', suffix = 'Complete', length = 50)
+    time.sleep(2)
+    results['swap']=pool.apply_async(swap_test,(qi_backend,shots))
+    progressBar(10, 100, prefix = 'Progress: ', suffix = 'Complete', length = 50)
+    results['measure'].wait()
+    progressBar(20, 100, prefix = 'Progress: ', suffix = 'Complete', length = 50)
+    results['x'].wait()
+    progressBar(30, 100, prefix = 'Progress: ', suffix = 'Complete', length = 50)
+    results['y'].wait()
+    progressBar(40, 100, prefix = 'Progress: ', suffix = 'Complete', length = 50)
+    results['z'].wait()
+    progressBar(50, 100, prefix = 'Progress: ', suffix = 'Complete', length = 50)
+    results['h'].wait()
+    progressBar(60, 100, prefix = 'Progress: ', suffix = 'Complete', length = 50)
+    results['cx'].wait()
+    progressBar(70, 100, prefix = 'Progress: ', suffix = 'Complete', length = 50)
+    results['cy'].wait()
+    progressBar(80, 100, prefix = 'Progress: ', suffix = 'Complete', length = 50)
+    results['cz'].wait()
+    progressBar(90, 100, prefix = 'Progress: ', suffix = 'Complete', length = 50)
+    results['swap'].wait()
+    progressBar(100, 100, prefix = 'Progress: ', suffix = 'Complete', length = 50)
+
+    final_results = {}
+    final_results['measure'] = prob_round(results['measure'].get())
+    final_results['x'] = prob_round(results['x'].get()/final_results['measure'])
+    final_results['y'] = prob_round(results['y'].get()/final_results['measure'])
+    final_results['z'] = prob_round(results['z'].get()/(final_results['measure']))
+    final_results['h'] = prob_round(results['h'].get())
+    final_results['cx'] = prob_round(results['cx'].get()/(final_results['x']*(final_results['measure']**2)))
+    final_results['cy'] = prob_round(results['cy'].get()/(final_results['x']*(final_results['measure']**2)))
+    final_results['cz'] = prob_round(results['cz'].get()/(final_results['x']*(final_results['measure']**2)))
+    final_results['swap'] = prob_round(results['swap'].get()/(final_results['x']*(final_results['measure']**2)))
+
+    write_string = ""
+    for key,value in final_results.items():
+        write_string = write_string + key + " " + str(value) + "\n"
+    with open("qdb_extra/"+args.arch+".csv","wt") as f: 
+        n = f.write(write_string)
+
+def decompose():
+    if(args.circuit==None):
+        sys.stderr.write('error: argument --circuit required to decompose\n')
+        parser.print_help()
+        exit(2)
+    else:
+        args.circuit = args.circuit[0]
+
+    gate_errors={}
+    if(args.arch!=None):
+        gate_errors = {}
+        try:
+            with open("qdb_extra/"+args.arch+".csv", "r") as f:
+                for entry in list(map(lambda x: x.split(), f.read().split("\n"))):
+                    if(entry==[]):
+                        break
+                    gate_errors[entry[0]]=float(entry[1])
+        except IOError as error:
+            print(error)
+            exit(2)
+    gates = {}
+    try:
+        with open(args.circuit, 'r') as f:
+            gates = find_gates(f.read())
+    except IOError as error:
+        print(error)
+        exit(2)
+    rank = 1
+    if(gate_errors=={}):
+        sorted_gates = [(k,v) for k, v in sorted(gates.items(), reverse=True, key=lambda item: item[1])]
+        print(colored("No architecture loaded!","red"),"\nAdd new qc spec with",colored('qdb benchmark',attrs=['bold']),'\n')
+        print(colored("Gate Counts for "+str(args.circuit),attrs=['underline']))
+        for pair in sorted_gates:
+            if(pair[1]==0):
+                break
+            print(str(rank) + ".",format_gate(pair[0]),pair[1])
+            rank = rank+1
+    else:
+        sorted_gates = [(k,v) for k, v in sorted(gates.items(), reverse=True, key=lambda item: 1-(gate_errors[item[0]]**item[1]))]
+        print(colored("Error Analysis for "+args.circuit,attrs=['underline']))
+        print("Overall First-Order P(Success):",round(gate_errors['measure']*success_rate(args.circuit),3))
+        for pair in sorted_gates:
+            if(pair[1]==0):
+                break
+            print()
+            print(str(rank) + ".",format_gate(pair[0]))
+            print("Count:",pair[1])
+            print("Gate Fidelity:",round(gate_errors[pair[0]],3))
+            print("First-Order P(Error):",round(1-gate_errors[pair[0]]**pair[1],3))
+            rank = rank+1
+def compare():
+    if(args.arch==None):
+        sys.stderr.write('error: argument -arch needed\n')
+        parser.print_help()
+        exit(2)
+    if(args.circuit==None):
+        sys.stderr.write('error: argument --circuit needed\n')
+        parser.print_help()
+        exit(2)
+    gate_errors={}
+    try:
+        with open("qdb_extra/"+args.arch+".csv", "r") as f:
+            for entry in list(map(lambda x: x.split(), f.read().split("\n"))):
+                if(entry==[]):
+                    break
+                gate_errors[entry[0]]=float(entry[1])
+    except IOError as error:
+        print(error)
+        exit(2)
+    fileList = []
+    fileAttr = []
+    for fileString in args.circuit:
+        fileList = fileList + glob(fileString)
+    for file in fileList:
+        gates = {}
+        try:
+            with open(file, 'r') as f:
+                gates = find_gates(f.read())
+        except IOError as error:
+            print(error)
+            exit(2)
+        sorted_gates = [(k,v) for k, v in sorted(gates.items(), reverse=True, key=lambda item: 1-(gate_errors[item[0]]**item[1]))]
+        gateTotal = 0
+        for gate in sorted_gates:
+            gateTotal = gateTotal + gate[1]
+        fileAttr.append((file, round(gate_errors['measure']*success_rate(file),3), sorted_gates[0][0], 1-(gate_errors[sorted_gates[0][0]]**sorted_gates[0][1]),gateTotal))
+
+    print(colored("Algorithm Stats",attrs=['underline']))
+
+    fileAttr.sort(key=lambda x: x[1], reverse=True)
+    rank = 1
+    for parsedFile in fileAttr:
+        print(str(rank)+".", parsedFile[0])
+        print("First-Order P(Success):", parsedFile[1])
+        print("Gate Total:", parsedFile[4])
+        print("Largest Gate P(Failure):", parsedFile[2], "(" + str(round(parsedFile[3],3)) + ")")
+        print()
+        rank=rank+1
+
+
+def main():
+    if(args.arch != None):
+        args.arch = args.arch.capitalize()
+
+    if(args.mode=='bench' or args.mode=='benchmark'):
+        benchmark()
+    if(args.mode=='dec' or args.mode=='decompose'):
+        decompose()
+    if(args.mode=='comp' or args.mode=='compare'):
+        compare()
+
+if __name__ == "__main__":
+    main()
