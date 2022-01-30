@@ -26,7 +26,8 @@ To test the efficacy of our setup, we implement a range of QEC algorithms as wel
 - Steane [[7,1,3]] code
 - Shor Code
 
-Of these, the [4,2,2] code, and the bit- and phase-flip codes were benchmarked on the Quantum Inspire backend.
+Of these, the [4,2,2] code, and the bit- and phase-flip codes were benchmarked on the Quantum Inspire backend. QDB was created for the 2022 iQuHACK Quantum Hackathon, and the presentation slides can be found [here](https://docs.google.com/presentation/d/14bgGE8bFa7LnlVUDN9K5LfEss2FWAK6qxk19KYCGNkE/edit?usp=sharing). Thank you to the organizers for a wonderful, if exhausting, 26 hours :)
+
 
 ## QDB Usage
 ### Dependencies
