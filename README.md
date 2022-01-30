@@ -1,19 +1,23 @@
 # QDB - CLI Quantum Benchmarking and Optimization Platform 
 ## Contents
-- [QDB](#qdb---cli-quantum-benchmarking-and-optimization-platform)
-  * [Overview](#overview)
-  * [QDB Usage](#qdb-usage)
-    + [Dependencies](#dependencies)
-    + [Benchmarking Gate Fidelities](#benchmarking-gate-fidelities)
-    + [Decomposing and Evaluating Circuits](#decomposing-and-evaluating-circuits)
-    + [Comparing Quantum Circuits](#comparing-quantum-circuits)
-    + [qdb -h](#qdb--h)
-  * [Benchmarking the Starmon-5 Hardware](#benchmarking-the-starmon-5-hardware)
-    + [Measuring Gate Fidelities](#measuring-gate-fidelities)
-    + [Predicting Algorithm Success](#predicting-algorithm-success)
-    + [Evaluating Efficacy of QDB Success Rate Predictions](#evaluating-efficacy-of-qdb-success-rate-predictions)
-  * [Personal Experiences](#personal-experiences)
-  * [Sources](#sources)
+- [Overview](#overview)
+- [QDB Usage](#qdb-usage)
+  * [Dependencies](#dependencies)
+  * [Benchmarking Gate Fidelities](#benchmarking-gate-fidelities)
+  * [Viewing Fidelities](#viewing-fidelities)
+  * [Decomposing and Evaluating Circuits](#decomposing-and-evaluating-circuits)
+  * [Comparing Quantum Circuits](#comparing-quantum-circuits)
+  * [qdb -h](#qdb--h)
+- [Benchmarking the Starmon-5 Hardware](#benchmarking-the-starmon-5-hardware)
+  * [Measuring Gate Fidelities](#measuring-gate-fidelities)
+  * [Predicting Algorithm Success](#predicting-algorithm-success)
+  * [Evaluating Efficacy of QDB Success Rate Predictions](#evaluating-efficacy-of-qdb-success-rate-predictions)
+- [Results](#results)
+  * [QDB Prediction vs Measured](#qdb-prediction-vs-measured)
+  * [Starmon-5 Gate Fidelity](#starmon-5-gate-fidelity)
+  * [Spin-2 Gate Fidelity](#spin-2-gate-fidelity)
+- [Personal Experiences](#personal-experiences)
+- [Sources](#sources)
 ## Overview
 This project was designed to automate the process of obtaining a hardware error profile of a quantum computer with the purpose of evaluating models of different error correcting protocols. One of the most studied families of error correcting codes, the stabilizer codes, are based on parity checks which are realized with gates from the set of Clifford gates. In this project, we investigate how the topology and capacity to realize these gates on quantum hardware impacts the efficacy of an error correcting code. We benchmark the gate fidelity of the Starmon-5 quantum processor to calibrate a toy model for error propagation. 
 
@@ -169,9 +173,46 @@ Quantum Circuit 5: Steane [[7,1,3] Code
 ![SteaneSeven](images/steane7code.png)
 
 ### Evaluating Efficacy of QDB Success Rate Predictions
-We used a comparative methodology to assess the effectiveness of the QBD tool at predicting the success rate of quantum circuits. This was done by constructing circuits that prepare the logical states for the [[4,2,2]] code and running them on the Starmon-5 hardware with 1,024 shots. Stabilizer measurements were taken, and the relative frequency of measurement results were recorded. Since the stabilizer measurements necessarily were made at the end of each shot due to hardware constraints, results were post selected as to examine the subset of shots with a stabilizer measurement of 0 on the central qubit. The relative frequency of measurement results was renormalized with respect to this subset as given in the adjusted column. The expected distribution of measurement results for an ideal quantum computer in a noiseless environment was found through simulations using the BasicAER backend in runs with 1,024 shots. The adjusted relative frequencies corresponding to these expected results was then totaled and reported as a sample proportion of successful shots approximating the true probability of success. The OpenQASM file corresponding to the tested quantum circuit was provided to the QBD analysis tool, yielding an estimate of the probability of success based off experimentally determined gate fidelities and standard measurement error as described in the Predicting Algorithm Success section. The percent error between the estimates of circuit success probability from the QBD analysis tool and Starmon-5 backend is given below for various circuit designs:
-![Approximation Comparison](data/logicalopsdata.csv)
+We used a comparative methodology to assess the effectiveness of the QBD tool at predicting the success rate of quantum circuits. This was done by constructing circuits that prepare the logical states for the [[4,2,2]] code and running them on the Starmon-5 hardware with 1,024 shots. Stabilizer measurements were taken, and the relative frequency of measurement results were recorded. Since the stabilizer measurements necessarily were made at the end of each shot due to hardware constraints, results were post selected as to examine the subset of shots with a stabilizer measurement of 0 on the central qubit. The relative frequency of measurement results was renormalized with respect to this subset as given in the adjusted column. The expected distribution of measurement results for an ideal quantum computer in a noiseless environment was found through simulations using the BasicAER backend in runs with 1,024 shots. The adjusted relative frequencies corresponding to these expected results was then totaled and reported as a sample proportion of successful shots approximating the true probability of success. The OpenQASM file corresponding to the tested quantum circuit was provided to the QBD analysis tool, yielding an estimate of the probability of success based off experimentally determined gate fidelities and standard measurement error as described in the Predicting Algorithm Success section. The percent error between the estimates of circuit success probability from the QBD analysis tool and Starmon-5 backend is given in results for various circuit designs.
 
+## Results
+### QDB Prediction vs Measured
+| Logical Op   | II    | XI    | IX    | XX                   |
+|--------------|-------|-------|-------|----------------------|
+| Measured*    | 0.530 | 0.478 | 0.431 | 0.446                |
+| Predicted    | 0.588 | 0.526 | 0.526 | 0.526                |
+| Difference   | 0.058 | 0.048 | 0.095 | 0.080                |
+| % Difference | 0.110 | 0.102 | 0.221 | 0.179                |
+|              |       |       |       | *with post-selection |
+
+We notice a monotonic tendency for QDB to overestimate the success probability for each algorithm. The most likely culprit is QDB's simple model not including time-based errors, such as energy-leakage and phase drifting. To address this, future iterations should compute and handle circuit depth, in order to properly simulate this error channel.
+### Starmon-5 Gate Fidelity
+| Measure: | 0.949 |
+|----------|-------|
+| X:       | 0.946 |
+| Y:       | 0.95  |
+| Z:       | 0.958 |
+| H:       | 0.968 |
+| CX:      | 0.947 |
+| CY:      | 0.934 |
+| CZ:      | 0.936 |
+| SWAP:    | 0.936 |
+
+These fidelities were noticeable lower than discussed in the data-sheet, though this is to be expected as the computer has since aged / has lost perfect calllibration.
+
+### Spin-2 Gate Fidelity
+| Measure: | 0.922 |
+|----------|-------|
+| X:       | 0.661 |
+| Y:       | 0.935 |
+| Z:       | 0.933 |
+| H:       | 0.994 |
+| CX:      | 0.973 |
+| CY:      | 1.0   |
+| CZ:      | 0.965 |
+| SWAP:    | 0.901 |
+
+Unsprprisingly gate fidelities are almost uniformly worse on the Spin-2 computer, however surprisingly the results seem far more stochastic. This suggests the instability in the Spin-2 computers we were warned of at the beginning of the challenge. Furthermore, we observe high performance on two qubit gates. This could either be argued as a perk of the platform, or a symptom of the X-gate being the most dominant error channel to the point where others are negligible.
 ## Personal Experiences
 Our hacking began yesterday morning in the blinding snow. We quickly abandoned our plans to meet in a building across campus and instead congregated in a dorm with a day’s worth of snacks to begin working in earnest. Our team had grown to five members over the past week. We started off in our own direction, each of us sifting through papers to try to pry open the inner workings of error correction and investigate its practical applications. Argy and Sofia began an intense conversation about error propagation while Ben and Wyatt muddled through different schemes for error detection and correction. We ate our cold meals that we had squirreled away, because the dining halls were all closed for the snow. Over the next hour, Alex started to type furiously, and then shared with us his plan to write a program to automate the process of error analysis. We rallied around this common goal for our project. We continued working intently, becoming increasingly bold in our usage of the Quantum Inspire backends, only stopping to sing Bohemian Rhapsody and for a brief game of Smash Bros. This hackathon has been the first for all of our members, and it has been a valuable learning experience.
 
