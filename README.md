@@ -54,8 +54,18 @@ Use `./qdb bench --arch (architecture)` to populate extra/Starmon-5.csv or extra
 #### Demonstration
 [![asciicast](https://asciinema.org/a/NtypYIcD0v2OiHpNW8jZY3Ucr.svg)](https://asciinema.org/a/NtypYIcD0v2OiHpNW8jZY3Ucr)
 
+### Viewing Fidelities
+Use `./qdb fid --arch (architecture)` to view the gate fidelities of a benchmarked architecture. Custom architectures can be included as well, and can be placed in the qdb_extra folder with the naming scheme `Title.csv` where the first letter must be capitalized.
+#### Examples
+```
+./qdb fid --arch Starmon-5
+./qdb fid --arch Spin-2
+```
+#### Demonstration
+[![asciicast](https://asciinema.org/a/QmxvM1ymTYyCssnX53nNP2rck.svg)](https://asciinema.org/a/QmxvM1ymTYyCssnX53nNP2rck)
+
 ### Decomposing and Evaluating Circuits
-Use `./qdb dec --arch (architecture) --circuit (circuit path)` to decompose a circuit into its composite gates, and calculate success probability based on previously measured gate fidelities. Also shows breakdown of each gate's overall error contribution.  
+Use `./qdb dec --arch (architecture) --circuit (circuit path)` to decompose a circuit into its composite gates, and calculate success probability based on previously measured gate fidelities. As before custom architectures can be included. Also shows breakdown of each gate's overall error contribution and finds largest sources of error.
 #### Examples
 ```
 ./qdb dec --arch Starmon-5 --circuit qasm_files/bit_flip.qasm
@@ -83,16 +93,15 @@ usage: qdb [-h] [--circuit [CIRCUIT ...]] [--arch ARCH] [--measure MEASURE] mode
 QDB Quantum Circuit Debugger
 
 positional arguments:
-  mode                  (BENCHmark|DECompose|COMPare)
+  mode                  (BENCHmark|DECompose|COMPare|FIDelity)
 
 options:
   -h, --help            show this help message and exit
   --circuit [CIRCUIT ...]
                         Input Circuit .qasm
   --arch ARCH           QC Architecture (Starmon-5|Spin-2)
-  --measure MEASURE     Include Measurement Error (True|False)
- ```
- 
+  --measure MEASURE     Include Measurement Error (True|False) 
+  ```
  ---
  
 ## Benchmarking the Starmon-5 Hardware
