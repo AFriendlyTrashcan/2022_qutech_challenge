@@ -1,4 +1,5 @@
 # QDB - CLI Quantum Benchmarking and Optimization Platform 
+### 1st Place - MIT iQuHACK 2022: QuTech Challenge
 ## Contents
 - [Overview](#overview)
 - [QDB Usage](#qdb-usage)
